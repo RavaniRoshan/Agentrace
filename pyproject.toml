@@ -1,6 +1,6 @@
 [build-system]
 requires = ["setuptools>=68", "wheel"]
-build-backend = "setuptools.backends.legacy:build"
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "agentrace"
@@ -50,3 +50,7 @@ include = ["agentrace*"]
 
 [tool.setuptools.package-data]
 agentrace = ["ui/*.html", "ui/*.js", "ui/*.css"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
