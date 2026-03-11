@@ -1,159 +1,260 @@
-# AgentTrace
+<div align="center">
 
-**Your agent ran 15 steps. Something broke at step 9. You have no idea why.**
-
-AgentTrace gives you a visual, step-by-step timeline of exactly what your AI agent did, decided, and why it failed. Works with any framework. Zero config. 100% local.
+<br />
 
 ```
-pip install agentrace
+ █████   ██████  ███████ ███    ██ ████████ ██████   █████   ██████ ███████ 
+██   ██ ██       ██      ████   ██    ██    ██   ██ ██   ██ ██      ██      
+███████ ██   ███ █████   ██ ██  ██    ██    ██████  ███████ ██      █████   
+██   ██ ██    ██ ██      ██  ██ ██    ██    ██   ██ ██   ██ ██      ██      
+██   ██  ██████  ███████ ██   ████    ██    ██   ██ ██   ██  ██████ ███████ 
 ```
 
-![AgentTrace Demo](https://raw.githubusercontent.com/yourusername/agentrace/main/docs/demo.gif)
+**Visual debugger for AI agent loops. Step-by-step. Locally. Zero config.**
+
+<br />
+
+[![PyPI version](https://img.shields.io/pypi/v/agentrace?color=7c6af7&labelColor=1a1a1f&style=flat-square)](https://pypi.org/project/agentrace/)
+[![Python](https://img.shields.io/pypi/pyversions/agentrace?color=3ecf8e&labelColor=1a1a1f&style=flat-square)](https://pypi.org/project/agentrace/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-4da6ff?labelColor=1a1a1f&style=flat-square)](LICENSE)
+[![Downloads](https://img.shields.io/pypi/dm/agentrace?color=f5a623&labelColor=1a1a1f&style=flat-square)](https://pypi.org/project/agentrace/)
+[![GitHub Stars](https://img.shields.io/github/stars/yourusername/agentrace?color=7c6af7&labelColor=1a1a1f&style=flat-square)](https://github.com/yourusername/agentrace)
+
+<br />
+
+[**Quick Start**](#quick-start) · [**How It Works**](#how-it-works) · [**Framework Support**](#works-with-any-framework) · [**API Reference**](#api-reference) · [**Roadmap**](#roadmap)
+
+<br />
+
+</div>
 
 ---
 
 ## The Problem
 
-You build an agent. It does 15 steps. Something goes wrong.
+You built an AI agent. It runs 15 steps. Something breaks at step 9.
 
-```
-Step 1: search web ✓
-Step 2: read file ✓
-Step 3: call LLM ✓
-...
-Step 9: ??? ← it just... stopped working
-```
+You have no idea why.
 
-You have no idea what the LLM was thinking at step 9. What prompt it received. What tool it tried to call. Why it failed.
+The LLM got a bad prompt? A tool returned garbage? A file permission failed silently? You add `print()` everywhere. You re-run it. You grep through 300 lines of logs. Forty minutes later, you find the bug.
 
-So you add `print()` statements everywhere. You run it again. You grep through 200 lines of logs. An hour later, you find the bug.
+**This is the debugging dark age for AI agents.** No step-by-step visibility. No tool call inspector. No way to see what the LLM was actually thinking at each decision point.
 
-**There is a better way.**
+AgentTrace fixes this.
 
 ---
 
-## What AgentTrace Does
+## Quick Start
 
-```
-You run your agent normally.
-AgentTrace captures everything that happened.
-You open a browser tab.
-You see this:
+```bash
+pip install agentrace
 ```
 
+Add **3 decorators** to your existing agent. Nothing else changes.
+
+```python
+from agentrace import trace, trace_llm, trace_tool
+import ollama
+
+@trace(name="research_agent")          # 1. marks the agent boundary
+def run_agent(task: str):
+    response = call_llm([{"role": "user", "content": task}])
+    results  = web_search(response.message.content)
+    write_file("output.md", results)
+
+@trace_llm                             # 2. captures prompt + response + tokens
+def call_llm(messages: list):
+    return ollama.chat(model="qwen2.5:7b", messages=messages)
+
+@trace_tool                            # 3. captures input + output + errors
+def web_search(query: str) -> str:
+    ...
+
+# Run your agent as normal
+run_agent("Summarize the latest papers on LLM agents")
 ```
-● ─── ● ─── ● ─── ● ─── ● ─── ● ─── ● ─── ● ─── ✕
-1     2     3     4     5     6     7     8     9
-                                              ERROR ↑
 
-Step 9 — write_file                    [FAILED] 12ms
-────────────────────────────────────────────────────
-INPUT
-  path: "output.md"
-  content: "# Summary..."
+```
+[AgentTrace] Run complete → COMPLETED
+[AgentTrace] 8 steps  |  2840 tokens  |  4.2s
+[AgentTrace] View trace → http://localhost:7823/trace/a3f9c1b2
+```
 
-ERROR
-  PermissionError: cannot write to output.md
-  File is open in another process
+Open the link. See this:
 
-← Step 8: LLM decided to write summary
-→ Step 10: never reached
+```
+● ──── ● ──── ● ──── ● ──── ● ──── ● ──── ● ──── ✕
+1      2      3      4      5      6      7      8
+                                               ERROR ↑
+
+  STEP 8   write_file   [FAILED]   12ms
+  ─────────────────────────────────────────────────
+  INPUT
+    path:    "output.md"
+    content: "# Research Summary..."
+
+  ERROR
+    PermissionError: cannot write to output.md
+    File is open in another process
+
+  ← Step 7: LLM decided to write the summary
+  → Step 9:  never reached
 ```
 
 Bug found. Fixed in 30 seconds.
 
 ---
 
-## Install
+## How It Works
 
-```bash
-pip install agentrace
-pip install agentrace[server]   # includes FastAPI UI server
+AgentTrace wraps your functions and builds a structured trace of the entire run. Every LLM call, every tool invocation, every error — captured as an ordered sequence of events with full input/output visibility.
+
 ```
+Your Agent Code
+    │
+    │  @trace / @trace_llm / @trace_tool decorators
+    ▼
+TraceCollector              captures events in-memory, per-thread
+    │
+    ▼
+~/.agentrace/traces/        one JSON file per run, never leaves your machine
+    │
+    ▼
+FastAPI  localhost:7823      serves trace data
+    │
+    ▼
+Visual UI                   timeline + step inspector + token counts
+```
+
+**Everything is local.** No cloud. No accounts. No API keys. No data leaves your machine.
 
 ---
 
-## Usage
+## What Gets Captured
 
-Add **3 decorators**. That's it.
+### LLM Calls (`@trace_llm`)
 
-```python
-from agentrace import trace, trace_llm, trace_tool
+| Field | Description |
+|---|---|
+| Full message history | Every message sent to the model |
+| Model name | Which model was called |
+| Response content | What the model replied |
+| Tokens in / out | Prompt + completion token counts |
+| Latency | Execution time in ms |
+| Error | Full traceback if the call failed |
 
-# 1. Wrap your agent entry point
-@trace(name="my_research_agent")
-def run_agent(task: str):
-    response = call_llm([{"role": "user", "content": task}])
-    result = web_search(response)
-    write_file("output.md", result)
+### Tool Calls (`@trace_tool`)
 
-# 2. Wrap LLM calls
-@trace_llm
-def call_llm(messages: list):
-    return ollama.chat(model="qwen2.5:7b", messages=messages)
-
-# 3. Wrap tool calls
-@trace_tool
-def web_search(query: str) -> str:
-    ...
-
-@trace_tool
-def write_file(path: str, content: str) -> str:
-    ...
-
-# Run your agent normally
-run_agent("Summarize the latest AI papers")
-# [AgentTrace] Run complete → COMPLETED
-# [AgentTrace] 8 steps | 2840 tokens | 4.2s
-# [AgentTrace] View trace: http://localhost:7823/trace/abc12345
-```
-
----
-
-## What You See
-
-For every step in the timeline:
-
-| Field | LLM Call | Tool Call |
-|---|---|---|
-| Input | Full prompt + message history | Function arguments |
-| Output | LLM response content | Return value |
-| Tokens | Prompt tokens + completion tokens | — |
-| Model | Model name + version | — |
-| Duration | Latency in ms | Latency in ms |
-| Error | Full traceback | Full traceback |
+| Field | Description |
+|---|---|
+| Function arguments | Exact values passed in |
+| Return value | What the tool returned |
+| Latency | Execution time in ms |
+| Error | Full traceback — including the line number |
 
 ---
 
 ## Works With Any Framework
 
-AgentTrace is framework-agnostic. Just wrap the functions.
+AgentTrace is **framework-agnostic**. It wraps your functions directly. No monkey-patching. No SDK. No middleware.
 
 ```python
-# Raw Python agents ✓
-# LangChain ✓
-# LlamaIndex ✓
-# CrewAI ✓
-# AutoGen ✓
-# Custom loops ✓
-# Async agents ✓
+# ✅ Raw Python agents
+# ✅ LangChain
+# ✅ LlamaIndex
+# ✅ CrewAI
+# ✅ AutoGen
+# ✅ Smolagents
+# ✅ Async agents (asyncio / anyio)
+# ✅ Any custom agent loop
 ```
 
-No lock-in. No SDK. No cloud.
+### LangChain Example
+
+```python
+from agentrace import trace, trace_llm, trace_tool
+from langchain_ollama import ChatOllama
+
+llm = ChatOllama(model="qwen2.5:7b")
+
+@trace(name="langchain_agent")
+def run_chain(question: str):
+    return chain.invoke({"question": question})
+
+@trace_llm
+def call_model(messages):
+    return llm.invoke(messages)
+```
+
+### CrewAI Example
+
+```python
+from agentrace import trace, trace_tool
+
+@trace(name="crewai_research")
+def run_crew(topic: str):
+    crew = Crew(agents=[researcher, writer], tasks=[research_task, write_task])
+    return crew.kickoff(inputs={"topic": topic})
+
+@trace_tool(name="search.web")
+def search_tool(query: str) -> str:
+    return SerperDevTool().run(query)
+```
 
 ---
 
-## Start the UI
+## API Reference
 
-```bash
-# Option 1: Auto-starts when you run your agent (default)
+### `@trace`
 
-# Option 2: Manual
-agentrace ui
-# → http://localhost:7823
+Marks an agent entry point. Starts a new trace for the entire run.
 
-# Option 3: As a module
-python -m agentrace.server
+```python
+@trace                              # bare decorator — uses function name
+@trace(name="my_agent")            # explicit run name
+@trace(name="agent", metadata={})  # attach custom metadata to the run
+@trace(auto_open=False)            # don't auto-start the UI server
+```
+
+Supports both `def` and `async def`.
+
+---
+
+### `@trace_llm`
+
+Wraps an LLM call. Captures prompt, response, token counts, model, and latency.
+
+```python
+@trace_llm                         # auto-detects model from call arguments
+@trace_llm(model="gpt-4o")        # explicit model label
+```
+
+Auto-detects token counts from Ollama, OpenAI, and Anthropic response formats.
+
+---
+
+### `@trace_tool`
+
+Wraps a tool function. Captures input arguments, return value, and any exception.
+
+```python
+@trace_tool                            # uses function name as tool name
+@trace_tool(name="filesystem.write")   # explicit name for the trace UI
+```
+
+---
+
+### `EventCapture` (manual instrumentation)
+
+For cases where decorators don't fit — wrapping third-party code, dynamic dispatch, etc.
+
+```python
+from agentrace import EventCapture
+
+with EventCapture("tool_call", "database.query", input={"sql": query}) as cap:
+    result = db.execute(query)
+    cap.output   = result.fetchall()
+    cap.metadata = {"rows": len(result)}
 ```
 
 ---
@@ -161,64 +262,120 @@ python -m agentrace.server
 ## CLI
 
 ```bash
+agentrace ui            # start UI at http://localhost:7823
 agentrace traces        # list all recorded traces
-agentrace ui            # start UI server
-agentrace clear         # delete all traces
+agentrace clear         # delete all traces from ~/.agentrace/traces/
+```
+
+Or run the server directly:
+
+```bash
+python -m agentrace.server
 ```
 
 ---
 
-## Architecture
+## Trace Storage
+
+Traces are stored as plain JSON at `~/.agentrace/traces/<trace_id>.json`.
 
 ```
-Your Agent Code
-    │
-    │  @trace decorators (3 lines of instrumentation)
-    ▼
-TraceCollector          ← captures every event in memory
-    │
-    ▼
-~/.agentrace/traces/    ← one JSON file per run, local only
-    │
-    ▼
-FastAPI server          ← localhost:7823
-    │
-    ▼
-Visual UI               ← timeline, step inspector, token counts
+~/.agentrace/
+└── traces/
+    ├── a3f9c1b2.json   # completed run — 8 steps
+    ├── 9367b8c4.json   # failed run — error at step 6
+    └── ...
 ```
 
-Everything runs locally. No accounts. No API keys. No data leaves your machine.
+Read programmatically:
+
+```python
+from agentrace import TraceStorage
+
+traces = TraceStorage.list_all()             # all trace summaries
+trace  = TraceStorage.load("a3f9c1b2")      # full trace with all steps
+```
+
+---
+
+## Async Support
+
+All decorators work on `async def` with zero changes:
+
+```python
+@trace(name="async_agent")
+async def run_agent(task: str):
+    response = await call_llm(...)
+    result   = await fetch_data(...)
+
+@trace_llm
+async def call_llm(messages):
+    return await async_client.chat(model="qwen2.5:7b", messages=messages)
+```
+
+---
+
+## Installation
+
+**Minimal** (collector + storage, no UI server):
+
+```bash
+pip install agentrace
+```
+
+**With UI server** (recommended):
+
+```bash
+pip install "agentrace[server]"
+# Installs: fastapi, uvicorn
+```
+
+**Requirements:** Python 3.10+
 
 ---
 
 ## Why Not Just Use...
 
-| Tool | Problem |
+| Tool | What's missing |
 |---|---|
-| LangSmith | Cloud-only, LangChain ecosystem, paid at scale |
-| WandB | ML training focus, not agent debugging |
-| Helicone | Proxy-based, no step-level visibility |
-| Print statements | You're reading this README |
+| **LangSmith** | Cloud-only. LangChain lock-in. Paid beyond free tier. |
+| **Helicone** | LLM proxy only. No step-level agent visibility. |
+| **WandB** | Built for model training. Not agent debugging. |
+| **MLflow** | Experiment tracking. No agent loop awareness. |
+| **Print statements** | You are reading this README. |
 
-AgentTrace is the first tool built specifically for debugging agentic loops, step by step, locally.
+AgentTrace is the first tool built specifically to debug **agentic loops** — the multi-step, tool-using, decision-making flows that break in ways traditional logging cannot explain.
 
 ---
 
 ## Roadmap
 
-- [x] Core trace collection
-- [x] JSON persistence
-- [x] Visual timeline UI
-- [x] LLM call capture (tokens, model, latency)
-- [x] Tool call capture
-- [x] Error highlighting
-- [ ] Multi-run comparison
-- [ ] Cost tracking ($ per run)
-- [ ] Regression test mode
-- [ ] AgentTrace Cloud (team sharing)
-- [ ] VS Code extension
-- [ ] LangChain auto-instrumentation
+**v0.1** *(current)*
+- [x] Core event capture — `@trace`, `@trace_llm`, `@trace_tool`
+- [x] JSON trace persistence (local, `~/.agentrace/`)
+- [x] Visual timeline UI with step inspector
+- [x] Token tracking (Ollama, OpenAI, Anthropic)
+- [x] Error highlighting with full traceback
+- [x] CLI (`ui`, `traces`, `clear`)
+- [x] Async support
+
+**v0.2** *(next)*
+- [ ] Side-by-side run comparison
+- [ ] Cost tracking ($ per run, per step)
+- [ ] Token timeline chart — visualize where budget goes
+- [ ] LangChain auto-instrumentation (zero decorators needed)
 - [ ] CrewAI auto-instrumentation
+
+**v0.3** *(planned)*
+- [ ] Regression mode — flag behavior changes between runs
+- [ ] CI/CD integration — fail build on behavior regression
+- [ ] VS Code extension — see traces inline while coding
+- [ ] Export trace as shareable HTML report
+
+**v1.0** *(horizon)*
+- [ ] AgentTrace Cloud — share traces across your team
+- [ ] Team dashboards and run history
+- [ ] Slack / Discord alerts on agent failure
 
 ---
 
@@ -226,22 +383,45 @@ AgentTrace is the first tool built specifically for debugging agentic loops, ste
 
 Built because debugging agents was making us insane.
 
-PRs welcome. Open an issue before starting large changes.
-
 ```bash
 git clone https://github.com/yourusername/agentrace
 cd agentrace
 pip install -e ".[server]"
-python examples/basic_agent.py   # generate sample traces
-agentrace ui                     # open the UI
+python examples/basic_agent.py    # generates two sample traces
+agentrace ui                      # open UI at localhost:7823
 ```
+
+Before opening a PR:
+- Open an issue first for non-trivial changes
+- Add an example for new features
+- Keep `collector.py` and `decorators.py` dependency-free (stdlib only)
 
 ---
 
 ## License
 
-MIT — use it, fork it, build on it.
+[MIT](LICENSE) — use it, fork it, ship it.
 
 ---
 
-*If this saved you an hour of debugging, star the repo. That's the only metric that matters right now.*
+<div align="center">
+
+<br />
+
+**If this saved you an hour of debugging — [star the repo](https://github.com/yourusername/agentrace).**
+
+That's the only metric that matters right now.
+
+<br />
+
+Made with frustration and Python
+&nbsp;·&nbsp;
+[GitHub](https://github.com/yourusername/agentrace)
+&nbsp;·&nbsp;
+[PyPI](https://pypi.org/project/agentrace/)
+&nbsp;·&nbsp;
+[Issues](https://github.com/yourusername/agentrace/issues)
+
+<br />
+
+</div>
