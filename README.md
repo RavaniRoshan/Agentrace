@@ -18,7 +18,7 @@
 [![Python](https://img.shields.io/pypi/pyversions/agentrace?color=3ecf8e&labelColor=1a1a1f&style=flat-square)](https://pypi.org/project/agentrace/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-4da6ff?labelColor=1a1a1f&style=flat-square)](LICENSE)
 [![Downloads](https://img.shields.io/pypi/dm/agentrace?color=f5a623&labelColor=1a1a1f&style=flat-square)](https://pypi.org/project/agentrace/)
-[![GitHub Stars](https://img.shields.io/github/stars/yourusername/agentrace?color=7c6af7&labelColor=1a1a1f&style=flat-square)](https://github.com/yourusername/agentrace)
+[![GitHub Stars](https://img.shields.io/github/stars/yourusername/agentrace?color=7c6af7&labelColor=1a1a1f&style=flat-square)](https://github.com/ravaniroshan/agentrace)
 
 <br />
 
@@ -408,7 +408,7 @@ Before opening a PR:
 
 <br />
 
-**If this saved you an hour of debugging — [star the repo](https://github.com/yourusername/agentrace).**
+**If this saved you an hour of debugging — [star the repo](https://github.com/ravaniroshan/agentrace).**
 
 That's the only metric that matters right now.
 
@@ -416,11 +416,11 @@ That's the only metric that matters right now.
 
 Made with frustration and Python
 &nbsp;·&nbsp;
-[GitHub](https://github.com/yourusername/agentrace)
+[GitHub](https://github.com/ravaniroshan/agentrace)
 &nbsp;·&nbsp;
 [PyPI](https://pypi.org/project/agentrace/)
 &nbsp;·&nbsp;
-[Issues](https://github.com/yourusername/agentrace/issues)
+[Issues](https://github.com/ravaniroshan/agentrace/issues)
 
 <br />
 
