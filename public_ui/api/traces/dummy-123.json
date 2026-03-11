@@ -1,0 +1,11 @@
+{
+  "trace_id": "dummy-123",
+  "run_name": "dummy run",
+  "status": "completed",
+  "started_at": "2023-10-01T12:00:00Z",
+  "total_duration_ms": 1540,
+  "steps": [
+    { "step_id": 1, "type": "llm_call", "name": "call_llm", "tokens_in": 420, "tokens_out": 89, "duration_ms": 1200 },
+    { "step_id": 2, "type": "tool_call", "name": "web_search", "tokens_in": 0, "tokens_out": 0, "duration_ms": 340 }
+  ]
+}

@@ -43,7 +43,7 @@ def list_traces(
     from_date: str | None = Query(default=None, alias="from"),
     to_date: str | None = Query(default=None, alias="to"),
 ):
-    return TraceStorage.search(q=q, status=status, model=model, from_date=from_date, to_date=to_date)
+    return TraceStorage.list_all()
 
 
 def _safe_json(value: Any) -> str:

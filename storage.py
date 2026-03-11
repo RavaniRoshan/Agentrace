@@ -9,7 +9,6 @@ import os
 import subprocess
 import sys
 import threading
-from datetime import date, datetime
 from pathlib import Path
 from typing import Optional
 from .collector import Trace
@@ -22,69 +21,6 @@ _server_lock = threading.Lock()
 
 
 class TraceStorage:
-
-    @staticmethod
-    def _trace_summary(data: dict) -> dict:
-        return {
-            "trace_id": data["trace_id"],
-            "run_name": data["run_name"],
-            "started_at": data["started_at"],
-            "status": data["status"],
-            "total_duration_ms": data.get("total_duration_ms"),
-            "total_tokens": data.get("total_tokens", 0),
-            "step_count": len(data.get("steps", [])),
-            "error": data.get("error"),
-        }
-
-    @staticmethod
-    def _parse_date(value: Optional[str]) -> Optional[date]:
-        if not value:
-            return None
-        try:
-            return datetime.strptime(value, "%Y-%m-%d").date()
-        except ValueError:
-            return None
-
-    @staticmethod
-    def _trace_started_date(trace: dict) -> Optional[date]:
-        started_at = trace.get("started_at")
-        if not started_at:
-            return None
-        try:
-            return datetime.fromisoformat(started_at.replace("Z", "+00:00")).date()
-        except ValueError:
-            return None
-
-    @staticmethod
-    def _matches_filters(
-        trace: dict,
-        q: Optional[str],
-        status: Optional[str],
-        model: Optional[str],
-        from_date: Optional[date],
-        to_date: Optional[date],
-    ) -> bool:
-        run_name = trace.get("run_name", "")
-        if q and q.lower() not in run_name.lower():
-            return False
-
-        if status and trace.get("status") != status:
-            return False
-
-        if model:
-            model_query = model.lower()
-            steps = trace.get("steps", [])
-            has_model = any(model_query == str(step.get("model", "")).lower() for step in steps)
-            if not has_model:
-                return False
-
-        trace_date = TraceStorage._trace_started_date(trace)
-        if from_date and trace_date and trace_date < from_date:
-            return False
-        if to_date and trace_date and trace_date > to_date:
-            return False
-
-        return True
 
     @staticmethod
     def save(trace: Trace) -> Path:
@@ -104,29 +40,24 @@ class TraceStorage:
 
     @staticmethod
     def list_all() -> list[dict]:
-        return TraceStorage.search()
-
-    @staticmethod
-    def search(
-        q: Optional[str] = None,
-        status: Optional[str] = None,
-        model: Optional[str] = None,
-        from_date: Optional[str] = None,
-        to_date: Optional[str] = None,
-    ) -> list[dict]:
         if not TRACES_DIR.exists():
             return []
-
-        from_date_parsed = TraceStorage._parse_date(from_date)
-        to_date_parsed = TraceStorage._parse_date(to_date)
-
         traces = []
         for path in sorted(TRACES_DIR.glob("*.json"), key=os.path.getmtime, reverse=True):
             try:
                 with open(path) as f:
                     data = json.load(f)
-                    if TraceStorage._matches_filters(data, q, status, model, from_date_parsed, to_date_parsed):
-                        traces.append(TraceStorage._trace_summary(data))
+                    # Return summary only for list view
+                    traces.append({
+                        "trace_id": data["trace_id"],
+                        "run_name": data["run_name"],
+                        "started_at": data["started_at"],
+                        "status": data["status"],
+                        "total_duration_ms": data.get("total_duration_ms"),
+                        "total_tokens": data.get("total_tokens", 0),
+                        "step_count": len(data.get("steps", [])),
+                        "error": data.get("error"),
+                    })
             except Exception:
                 continue
         return traces
