@@ -1,0 +1,8 @@
+# Astro site
+agentrace-site/dist/
+agentrace-site/.astro/
+agentrace-site/node_modules/
+
+# Old landing page (deleted — safety net)
+landing/
+docs/

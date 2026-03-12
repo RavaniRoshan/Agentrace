@@ -1,0 +1,27 @@
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Syne:wght@400;600;700;800&display=swap");
+
+:root {
+  --sl-color-accent-low: #2d2060;
+  --sl-color-accent: #7c6af7;
+  --sl-color-accent-high: #b8b0ff;
+  --sl-color-white: #ffffff;
+  --sl-color-gray-1: #e8e8f0;
+  --sl-color-gray-2: #c0c0d0;
+  --sl-color-gray-3: #808090;
+  --sl-color-gray-4: #404050;
+  --sl-color-gray-5: #252530;
+  --sl-color-gray-6: #18181d;
+  --sl-color-black: #0a0a0b;
+  --sl-font: "JetBrains Mono", monospace;
+}
+
+.hero h1 {
+  font-family: "Syne", sans-serif;
+  font-weight: 800;
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  letter-spacing: -0.03em;
+}
+
+code, pre {
+  font-family: "JetBrains Mono", monospace;
+}
