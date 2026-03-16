@@ -7,22 +7,54 @@ description: Architecture and internals of AgentTrace.
 
 ## Architecture
 
-```text
-Your Agent Code
-       │
-       │  @trace / @trace_llm / @trace_tool
-       ▼
-TraceCollector        in-memory, per-thread (threading.local)
-       │
-       ▼
-~/.agentrace/traces/  one JSON file per run, local only
-       │
-       ▼
-Express server        localhost:7823  (npx @ravaniroshan/agentrace)
-       │
-       ▼
-Web UI                timeline · step inspector · token counts
-```
+<svg width="900" height="520" viewBox="0 0 900 520" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .label{fill:white;font-family:Arial, Helvetica, sans-serif;font-size:16px;text-anchor:middle;dominant-baseline:middle;}
+    .small{font-size:13px;fill:#eef2ff}
+    .arrow{stroke:#64748b;stroke-width:2.5;marker-end:url(#arrow)}
+  </style>
+
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="10" refY="5" orient="auto">
+      <polygon points="0 0, 10 5, 0 10" fill="#64748b" />
+    </marker>
+    <linearGradient id="grad1" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#6366f1"/>
+      <stop offset="100%" stop-color="#4f46e5"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="300" y="20" width="300" height="65" rx="18" fill="url(#grad1)" />
+  <text class="label" x="450" y="48">Your Agent Code</text>
+  <text class="label small" x="450" y="68">@trace / @trace_llm / @trace_tool</text>
+
+  <line class="arrow" x1="450" y1="85" x2="450" y2="120" />
+
+  <rect x="260" y="120" width="380" height="70" rx="35" fill="#0ea5e9" />
+  <text class="label" x="450" y="155">TraceCollector</text>
+  <text class="label small" x="450" y="175">in-memory · per-thread (threading.local)</text>
+
+  <line class="arrow" x1="450" y1="190" x2="450" y2="230" />
+
+  <rect x="240" y="230" width="420" height="70" rx="10" fill="#10b981" stroke="#065f46" stroke-width="2" stroke-dasharray="8 6" />
+  <text class="label" x="450" y="265">~/.agentrace/traces/</text>
+  <text class="label small" x="450" y="285">one JSON file per run · local only</text>
+
+  <line class="arrow" x1="450" y1="300" x2="450" y2="340" />
+
+  <g>
+    <rect x="255" y="345" width="390" height="20" rx="6" fill="#f59e0b" />
+    <rect x="250" y="360" width="400" height="50" rx="8" fill="#fbbf24" />
+  </g>
+  <text class="label" x="450" y="382">Express Server</text>
+  <text class="label small" x="450" y="400">localhost:7823 · npx @ravaniroshan/agentrace</text>
+
+  <line class="arrow" x1="450" y1="410" x2="450" y2="450" />
+
+  <rect x="300" y="450" width="300" height="60" rx="14" fill="#ec4899" />
+  <text class="label" x="450" y="480">Web UI</text>
+  <text class="label small" x="450" y="500">timeline · step inspector · token counts</text>
+</svg>
 
 ## The Agent Loop
 
