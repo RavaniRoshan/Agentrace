@@ -1,5 +1,5 @@
 """Demo script to populate the AgentTrace dashboard with sample traces."""
-from agentrace import trace, trace_llm, trace_tool
+from agentclaw import trace, trace_llm, trace_tool
 import time, random
 
 
@@ -53,4 +53,4 @@ if __name__ == "__main__":
     except Exception:
         pass
     
-    print("Done. Open: npx @ravaniroshan/agentrace")
+    print("Done. Open: npx agentclaw")

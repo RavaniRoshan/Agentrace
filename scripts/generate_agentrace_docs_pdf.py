@@ -30,7 +30,7 @@ from reportlab.platypus import (
 
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT_DIR = ROOT / "output" / "pdf"
-PDF_PATH = OUTPUT_DIR / "agentrace-product-documentation.pdf"
+PDF_PATH = OUTPUT_DIR / "agentclaw-product-documentation.pdf"
 
 PALETTE = {
     "ink": colors.HexColor("#10233F"),
@@ -49,9 +49,9 @@ PALETTE = {
 
 def load_project_context() -> dict:
     pyproject = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
-    npm_package = json.loads((ROOT / "agentrace-npm" / "package.json").read_text(encoding="utf-8"))
+    npm_package = json.loads((ROOT / "agentclaw-npm" / "package.json").read_text(encoding="utf-8"))
 
-    trace_dir = ROOT / "tmp-home" / ".agentrace" / "traces"
+    trace_dir = ROOT / "tmp-home" / ".agentclaw" / "traces"
     traces = []
     if trace_dir.exists():
         for path in sorted(trace_dir.glob("*.json")):
@@ -275,7 +275,7 @@ def architecture_diagram() -> DrawingFlowable:
     nodes = [
         (25, 135, 120, 60, PALETTE["blue"], "Python agent", "Decorated entry point, tools, and LLM calls"),
         (175, 135, 120, 60, PALETTE["mint"], "TraceCollector", "In-process step capture and aggregation"),
-        (325, 135, 120, 60, PALETTE["cyan"], "JSON storage", "~/.agentrace/traces and costs.json"),
+        (325, 135, 120, 60, PALETTE["cyan"], "JSON storage", "~/.agentclaw/traces and costs.json"),
         (165, 38, 140, 66, PALETTE["gold"], "Local viewer", "Express or FastAPI server with browser UI"),
     ]
 
@@ -404,8 +404,8 @@ def repo_map_diagram() -> DrawingFlowable:
     d.add(String(10, 220, "Repository map", fontName="Helvetica-Bold", fontSize=13, fillColor=PALETTE["ink"]))
 
     columns = [
-        (20, "agentrace/", PALETTE["blue"], ["collector.py", "decorators.py", "storage.py", "server.py", "integrations/langchain.py"]),
-        (170, "agentrace-npm/", PALETTE["cyan"], ["bin/agentrace.js", "src/server.js", "commands/ui.js", "commands/traces.js", "src/ui/index.html"]),
+        (20, "agentclaw/", PALETTE["blue"], ["collector.py", "decorators.py", "storage.py", "server.py", "integrations/langchain.py"]),
+        (170, "agentclaw-npm/", PALETTE["cyan"], ["bin/agentclaw.js", "src/server.js", "commands/ui.js", "commands/traces.js", "src/ui/index.html"]),
         (320, "supporting assets", PALETTE["mint"], ["examples/basic_agent.py", "landing/index.html", "README.md", "pyproject.toml"]),
     ]
     for x, title, fill, items in columns:
@@ -451,7 +451,7 @@ def metric_table(context: dict) -> Table:
     failed_trace = context["failed_trace"] or {}
     rows = [
         ["Documentation timestamp", context["date"]],
-        ["Python package", f"agentrace {context['python_version']}"],
+        ["Python package", f"agentclaw {context['python_version']}"],
         ["npm package", f"{context['npm_package']} {context['npm_version']}"],
         ["Sample success run", f"{len(success_trace.get('steps', []))} steps, {success_trace.get('total_tokens', 0)} tokens, {success_trace.get('total_duration_ms', 'n/a')} ms"],
         ["Sample failure run", failed_trace.get("error", "No failure sample found")],
@@ -507,11 +507,11 @@ def surface_cards(context: dict, styles) -> Table:
 def command_table() -> Table:
     rows = [
         ["Command", "Purpose"],
-        ["pip install agentrace", "Install the Python instrumentation package."],
-        ["npx @ravaniroshan/agentrace", "Start the local viewer on http://localhost:7823."],
-        ["npx @ravaniroshan/agentrace traces", "List all stored traces in the terminal."],
-        ["npx @ravaniroshan/agentrace clear", "Delete recorded trace JSON files after confirmation."],
-        ["agentrace.patch_langchain()", "Monkey-patch LangChain primitives for automatic step capture."],
+        ["pip install agentclaw", "Install the Python instrumentation package."],
+        ["npx agentclaw", "Start the local viewer on http://localhost:7823."],
+        ["npx agentclaw traces", "List all stored traces in the terminal."],
+        ["npx agentclaw clear", "Delete recorded trace JSON files after confirmation."],
+        ["agentclaw.patch_langchain()", "Monkey-patch LangChain primitives for automatic step capture."],
     ]
     table = Table(rows, colWidths=[180, 250], repeatRows=1)
     table.setStyle(
@@ -630,7 +630,7 @@ def cover_block(context: dict, styles) -> list:
             ],
             [
                 Paragraph(context["date"], styles["CardTitle"]),
-                Paragraph(f"agentrace {context['python_version']}", styles["CardTitle"]),
+                Paragraph(f"agentclaw {context['python_version']}", styles["CardTitle"]),
                 Paragraph(f"{context['npm_package']} {context['npm_version']}", styles["CardTitle"]),
             ],
         ],
@@ -724,7 +724,7 @@ def build_story(context: dict) -> list:
             ),
             code_panel(
                 """
-from agentrace import trace, trace_llm, trace_tool
+from agentclaw import trace, trace_llm, trace_tool
 
 @trace(name="research_agent")
 def run_agent(task: str):
@@ -774,7 +774,7 @@ def web_search(query: str):
             Spacer(1, 12),
             code_panel(
                 """
-from agentrace import patch_langchain
+from agentclaw import patch_langchain
 
 patch_langchain()
 
@@ -839,7 +839,7 @@ patch_langchain()
         [
             Paragraph("6. Storage, Search, and HTTP Surface", styles["SectionTitle"]),
             Paragraph(
-                "Storage is deliberately simple: one JSON file per run under ~/.agentrace/traces/, plus a costs.json file that seeds default model pricing. That simplicity makes it easy to inspect, back up, clear, and port traces between machines.",
+                "Storage is deliberately simple: one JSON file per run under ~/.agentclaw/traces/, plus a costs.json file that seeds default model pricing. That simplicity makes it easy to inspect, back up, clear, and port traces between machines.",
                 styles["SectionLead"],
             ),
             endpoint_table(),

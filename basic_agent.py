@@ -3,7 +3,7 @@ AgentTrace — Basic Example
 Run this to see AgentTrace in action.
 
 Requirements:
-    pip install agentrace ollama
+    pip install agentclaw ollama
 
 Then: ollama pull qwen2.5-coder:7b-instruct-q4_K_M
 """
@@ -16,7 +16,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 import json
 import time
 import random
-from agentrace import trace, trace_llm, trace_tool
+from agentclaw import trace, trace_llm, trace_tool
 
 
 # ── Simulated Tools (no real dependencies) ───────────────────────────────────

@@ -31,12 +31,12 @@ jobs:
 
       - name: Verify trace files
         run: |
-          if [ ! -d ~/.agentrace/traces/ ] || [ -z "$(ls -A ~/.agentrace/traces/)" ]; then
-            echo "Trace files were not created in ~/.agentrace/traces/!"
+          if [ ! -d ~/.agentclaw/traces/ ] || [ -z "$(ls -A ~/.agentclaw/traces/)" ]; then
+            echo "Trace files were not created in ~/.agentclaw/traces/!"
             exit 1
           fi
           echo "Trace files found:"
-          ls -la ~/.agentrace/traces/
+          ls -la ~/.agentclaw/traces/
 
   lint:
     runs-on: ubuntu-latest

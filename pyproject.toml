@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "agentclaw"
-version = "0.2.1"
+version = "0.3.0"
 description = "Visual debugger for AI agents. See every step, every decision, every failure."
 readme = "README.md"
 license = { text = "MIT" }
@@ -37,19 +37,19 @@ all = [
 ]
 
 [project.scripts]
-agentrace = "agentrace.cli:main"
+agentclaw = "agentclaw.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/yourusername/agentrace"
-Documentation = "https://github.com/yourusername/agentrace#readme"
-Issues = "https://github.com/yourusername/agentrace/issues"
+Homepage = "https://github.com/RavaniRoshan/agentclaw"
+Documentation = "https://github.com/RavaniRoshan/agentclaw#readme"
+Issues = "https://github.com/RavaniRoshan/agentclaw/issues"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["agentrace*"]
+include = ["agentclaw*"]
 
 [tool.setuptools.package-data]
-agentrace = ["ui/*.html", "ui/*.js", "ui/*.css"]
+agentclaw = ["ui/*.html", "ui/*.js", "ui/*.css"]
 
 [tool.ruff]
 line-length = 100

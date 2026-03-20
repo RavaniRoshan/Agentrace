@@ -1,7 +1,7 @@
 """
 AgentTrace — Server
 FastAPI backend. Serves trace data + the UI.
-Run: python -m agentrace.server
+Run: python -m agentclaw.server
 """
 
 import sys
@@ -18,11 +18,11 @@ try:
     from fastapi.responses import HTMLResponse
     import uvicorn
 except ImportError:
-    print("[AgentTrace] Missing dependencies. Run: pip install agentrace[server]")
+    print("[AgentClaw] Missing dependencies. Run: pip install agentclaw[server]")
     print("Or: pip install fastapi uvicorn")
     sys.exit(1)
 
-from agentrace.storage import TraceStorage, SERVER_PORT
+from agentclaw.storage import TraceStorage, SERVER_PORT
 
 app = FastAPI(title="AgentTrace", docs_url=None, redoc_url=None)
 
@@ -152,10 +152,10 @@ UI_PATH = Path(__file__).parent / "ui" / "index.html"
 def serve_ui(trace_id: str = None):
     if UI_PATH.exists():
         return UI_PATH.read_text()
-    return HTMLResponse("<h1>AgentTrace UI not found. Run: agentrace build-ui</h1>")
+    return HTMLResponse("<h1>AgentClaw UI not found. Run: agentclaw build-ui</h1>")
 
 
 if __name__ == "__main__":
-    print(f"\n[AgentTrace] UI running at http://localhost:{SERVER_PORT}")
-    print("[AgentTrace] Serving traces from ~/.agentrace/traces/\n")
+    print(f"\n[AgentClaw] UI running at http://localhost:{SERVER_PORT}")
+    print("[AgentClaw] Serving traces from ~/.agentclaw/traces/\n")
     uvicorn.run(app, host="0.0.0.0", port=SERVER_PORT, log_level="error")
